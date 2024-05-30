@@ -9,14 +9,10 @@ declare_id!("2VcxeD66wzXGxGgrQB2YNXHy5y91HESMeV6vouWonq7P");
 pub mod puppet_master {
     use super::*;
 
-    pub fn pull_strings(ctx: Context<PullStrings>, data: u64) -> Result<()> {
-        // let cpi_program = ctx.accounts.puppet_program.to_account_info();
-        // let cpi_accounts = SetData {
-        //     puppet: ctx.accounts.puppet.to_account_info(),
-        // };
-        // let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        // puppet::cpi::set_data(cpi_ctx, data)
-        puppet::cpi::set_data(ctx.accounts.set_data_ctx(), data)
+    pub fn pull_strings(ctx: Context<PullStrings>, bump: u8, data: u64) -> Result<()> {
+        let bump = &[bump][..];
+
+        puppet::cpi::set_data(ctx.accounts.set_data_ctx().with_signer(&[&[bump]]), data)
     }
 }
 
@@ -24,8 +20,9 @@ pub mod puppet_master {
 pub struct PullStrings<'info> {
     #[account(mut)]
     pub puppet: Account<'info, Data>,
+    /// CHECK: only used as a signing PDA
+    pub authority: UncheckedAccount<'info>,
     pub puppet_program: Program<'info, Puppet>,
-    pub authority: Signer<'info>
 }
 
 impl<'info> PullStrings<'info> {
